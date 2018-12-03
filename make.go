@@ -11,9 +11,9 @@ import (
 	"strings"
 )
 
-func ResolveMakefileVariables(makefile string, vars ...string) (map[string]string, error) {
+func ResolveMakefileVariables(makefiles []string, vars ...string) (map[string]string, error) {
 
-	dir := filepath.Dir(makefile)
+	dir := filepath.Dir(makefiles[0])
 
 	tmpFile, err := ioutil.TempFile(dir, ".vars.*.mk")
 	if err != nil {
@@ -22,7 +22,9 @@ func ResolveMakefileVariables(makefile string, vars ...string) (map[string]strin
 	defer os.Remove(tmpFile.Name())
 
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "include %s\n", makefile)
+	for _, v := range makefiles {
+		fmt.Fprintf(&buf, "include %s\n", v)
+	}
 	fmt.Fprintf(&buf, "MAKECMDGOALS =\n")
 	targetName := fmt.Sprintf("%s_%d", os.Args[0], os.Getpid())
 	fmt.Fprintf(&buf, "%s:\n", targetName)

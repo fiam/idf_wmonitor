@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -16,6 +17,7 @@ var (
 	projectPathArg    = flag.String("p", ".", "Path to the project directory")
 	hostArg           = flag.String("host", "", "Host to connect to, leave empty for scanning")
 	nonInteractiveArg = flag.Bool("n", false, "Non interactive")
+	makefiles         = flag.String("m", "Makefile", "Name of the Makefile to use to load the app information (relative to project directory)")
 )
 
 type ProjectInfo struct {
@@ -36,9 +38,12 @@ func handleInput(km *keyboardMonitor, ch chan<- byte) {
 }
 
 func findProjectInfo(projectPath string) (*ProjectInfo, error) {
-	makefilePath := filepath.Join(projectPath, "Makefile")
+	var makefilePaths []string
+	for _, v := range strings.Split(*makefiles, ",") {
+		makefilePaths = append(makefilePaths, filepath.Join(projectPath, v))
+	}
 	varNames := []string{"IDF_PATH", "APP_ELF", "APP_BIN"}
-	vars, err := ResolveMakefileVariables(makefilePath, varNames...)
+	vars, err := ResolveMakefileVariables(makefilePaths, varNames...)
 	if err != nil {
 		return nil, err
 	}
